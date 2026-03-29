@@ -1,0 +1,365 @@
+{
+  "_meta": {
+    "title": "HealthMark DICOM Transfer Troubleshooting Knowledge Base",
+    "version": "1.0",
+    "audience": "Clinical staff and on-site IT — non-technical users new to DICOM",
+    "last_updated": "2026-03-29",
+    "maintainer": "HealthMark Support Team",
+    "notes": "To add or update an issue, copy an existing issue block and edit the fields. Do not change the field names — the diagnostic app reads them exactly as written."
+  },
+
+  "issues": [
+    {
+      "id": "hmk-001",
+      "title": "Scanner says Transfer Complete, but images never arrived",
+      "severity": "high",
+      "severity_label": "Urgent",
+      "category": "AE Title / Name tag",
+      "time_estimate": "~15 min",
+      "symptoms": [
+        "transfer complete",
+        "images missing",
+        "not in system",
+        "can't find scan",
+        "association rejected",
+        "ASSOC-RJ",
+        "name tag",
+        "AE title",
+        "disappeared",
+        "maintenance"
+      ],
+      "symptom_questions": [
+        {
+          "question": "Does the scanner show 'Transfer Complete' or similar success message?",
+          "answer_yes_points_to": "hmk-001"
+        },
+        {
+          "question": "Did this start happening after an overnight IT maintenance window?",
+          "answer_yes_points_to": "hmk-001"
+        }
+      ],
+      "plain_summary": "Your scanner finished its side of the transfer, but the receiving system rejected the connection before any images moved. This almost always comes down to a name tag (AE Title) mismatch — like someone trying to enter a building with an ID that isn't on the approved list.",
+      "cause": "A device's AE Title (its unique name tag) was renamed, mistyped, or never registered on the receiving system. The PACS or Purview rejected the connection silently. Common after overnight IT maintenance scripts.",
+      "steps": [
+        {
+          "step": 1,
+          "instruction": "Check when it last worked. If it worked yesterday, something changed — ask your IT team if any maintenance happened overnight."
+        },
+        {
+          "step": 2,
+          "instruction": "Find your scanner's AE Title. On the scanner go to Settings → Network → DICOM Configuration. Look for 'Calling AE Title' and write it down exactly — every character including underscores and numbers."
+        },
+        {
+          "step": 3,
+          "instruction": "Compare it to what the receiving system expects. Log into your Purview or PACS admin panel → Device Manager → Accepted Devices. AE Titles are case-sensitive — CT_Scanner_01 and CT_SCANNER_01 are treated as different names."
+        },
+        {
+          "step": 4,
+          "instruction": "Fix the mismatch on whichever side is wrong. If a maintenance script changed the PACS entry, restore it and note the change for your records."
+        },
+        {
+          "step": 5,
+          "instruction": "Run a C-ECHO test from your scanner's DICOM tools before resending any patient images. A successful echo confirms the connection is working."
+        },
+        {
+          "step": 6,
+          "instruction": "Resend from the scanner's 'Failed Transfers' or 'Unsent Studies' queue once the echo passes."
+        }
+      ],
+      "success_indicator": "Images appear in Purview or your viewer within 30–60 seconds of resending. Check that the study count matches what the scanner shows.",
+      "prevention_tip": "Ask your IT team to add a connection test (C-ECHO) to any future maintenance checklist that touches imaging devices or network settings.",
+      "escalate_if": "The name tags match exactly on both sides but images still aren't arriving, or you cannot access the device settings to check. Have screenshots of both AE Title screens ready when you call.",
+      "patient_safety_flag": false
+    },
+
+    {
+      "id": "hmk-002",
+      "title": "Scanner shows an error immediately — won't even try to connect",
+      "severity": "high",
+      "severity_label": "Urgent",
+      "category": "Network connection",
+      "time_estimate": "~20 min",
+      "symptoms": [
+        "connection refused",
+        "host unreachable",
+        "cannot connect",
+        "network error",
+        "fails immediately",
+        "timeout",
+        "firewall",
+        "port",
+        "IP address",
+        "won't connect",
+        "error right away"
+      ],
+      "symptom_questions": [
+        {
+          "question": "Does the error appear immediately, before any transfer attempt?",
+          "answer_yes_points_to": "hmk-002"
+        },
+        {
+          "question": "Are ALL scanners affected, not just one?",
+          "answer_yes_points_to": "hmk-002"
+        }
+      ],
+      "plain_summary": "The scanner can't physically reach the system it's trying to send images to. This is a network problem — like trying to call a disconnected number. Most common causes are a changed IP address, a firewall rule update, or the receiving service being offline.",
+      "cause": "Network-layer failure before the DICOM conversation even starts. Could be a changed IP address, blocked firewall port (104 is the standard DICOM port), or the PACS/Purview service not running.",
+      "steps": [
+        {
+          "step": 1,
+          "instruction": "Check the destination IP address in your scanner's DICOM settings. Confirm it hasn't changed — network leases sometimes expire and a device gets a new address without notice."
+        },
+        {
+          "step": 2,
+          "instruction": "Run a basic network test. From any computer on the same network, open a command prompt and type: ping [PACS IP address]. If it responds, the network path is open."
+        },
+        {
+          "step": 3,
+          "instruction": "Check if other scanners or workstations can reach the system successfully. If they can, the problem is specific to this one scanner's settings."
+        },
+        {
+          "step": 4,
+          "instruction": "Confirm the receiving service is running. Log into your Purview dashboard or PACS admin panel and check the service status."
+        },
+        {
+          "step": 5,
+          "instruction": "Ask your IT team about recent firewall changes. Medical imaging uses port 104 by default — if a firewall was updated, that port may have been blocked."
+        }
+      ],
+      "success_indicator": "The ping responds successfully and your scanner completes a C-ECHO test without error.",
+      "prevention_tip": "Keep a record of your PACS and Purview IP addresses and ports. When your IT team makes network changes, ask them to verify DICOM connectivity before closing the maintenance window.",
+      "escalate_if": "Ping fails entirely, multiple scanners are affected simultaneously, or you cannot access firewall or network settings. Call immediately if all imaging is down — this has direct patient care impact.",
+      "patient_safety_flag": true,
+      "patient_safety_note": "If ALL scanners are affected and no images can transfer anywhere, treat this as an emergency. Call HealthMark Support immediately — do not wait to troubleshoot."
+    },
+
+    {
+      "id": "hmk-003",
+      "title": "Only some images arrived — the study looks incomplete",
+      "severity": "med",
+      "severity_label": "Moderate",
+      "category": "Partial transfer",
+      "time_estimate": "~30 min",
+      "symptoms": [
+        "partial",
+        "incomplete",
+        "missing slices",
+        "only some images",
+        "cut off",
+        "stopped partway",
+        "not all there",
+        "fewer images than expected",
+        "timeout",
+        "large study",
+        "CT",
+        "MRI"
+      ],
+      "symptom_questions": [
+        {
+          "question": "Did some images arrive, but not all of them?",
+          "answer_yes_points_to": "hmk-003"
+        },
+        {
+          "question": "Is this a large study — like a high-slice CT or full MRI series?",
+          "answer_yes_points_to": "hmk-003"
+        }
+      ],
+      "plain_summary": "The transfer started successfully but stopped before all images arrived. Large studies with hundreds of image slices take longer and are more vulnerable to interruptions. A brief network hiccup or an aggressive timeout setting can cut the transfer off partway.",
+      "cause": "Network interruption or timeout during a long transfer. The DICOM association dropped mid-study. Near-full storage on the receiving end can also cause mid-transfer failures that look like network issues.",
+      "steps": [
+        {
+          "step": 1,
+          "instruction": "Flag the study as incomplete in Purview or your PACS immediately. This prevents a radiologist from reading or reporting on an incomplete study."
+        },
+        {
+          "step": 2,
+          "instruction": "Count the images. Check how many arrived versus how many the scanner shows for that study — the gap tells you how far the transfer got."
+        },
+        {
+          "step": 3,
+          "instruction": "Delete the partial study from the receiving system before resending. Having both an incomplete and a complete version creates dangerous confusion."
+        },
+        {
+          "step": 4,
+          "instruction": "Resend the full study from the scanner's resend queue and monitor it until fully complete."
+        },
+        {
+          "step": 5,
+          "instruction": "Check storage space on Purview or your PACS if the same study fails again at the same point. A nearly-full storage volume causes mid-transfer failures."
+        }
+      ],
+      "success_indicator": "Image count in the receiving system matches the scanner's study log exactly. Confirm with the radiologist before releasing for reading.",
+      "prevention_tip": "Monitor storage usage monthly. Most PACS and cloud systems send alerts at 80% capacity — make sure someone on your team receives those alerts.",
+      "escalate_if": "The retransmit fails again at the same slice count, or large studies consistently fail while small ones succeed. This pattern indicates a timeout or configuration issue that needs a settings change.",
+      "patient_safety_flag": true,
+      "patient_safety_note": "A partial study must never be read or reported on. Flag it as incomplete in your system immediately so it cannot enter the radiologist's reading queue."
+    },
+
+    {
+      "id": "hmk-004",
+      "title": "New scanner or device can't send images at all",
+      "severity": "med",
+      "severity_label": "Moderate",
+      "category": "New device setup",
+      "time_estimate": "~45 min",
+      "symptoms": [
+        "new scanner",
+        "new device",
+        "new modality",
+        "just installed",
+        "never worked",
+        "not registered",
+        "setup",
+        "brand new",
+        "ultrasound",
+        "x-ray",
+        "added equipment"
+      ],
+      "symptom_questions": [
+        {
+          "question": "Is this a brand new device that has never successfully sent images?",
+          "answer_yes_points_to": "hmk-004"
+        },
+        {
+          "question": "Was new imaging equipment recently installed at your facility?",
+          "answer_yes_points_to": "hmk-004"
+        }
+      ],
+      "plain_summary": "New devices aren't automatically trusted. Before a new scanner can send images to Purview or your PACS, it must be registered — its name tag needs to be added to the approved list, and the device needs to know where to send images. This is a setup step, not a malfunction.",
+      "cause": "The new device has not been registered in the receiving system. Both sides need to know about each other before any connection is possible.",
+      "steps": [
+        {
+          "step": 1,
+          "instruction": "Gather the new device's DICOM information — AE Title, IP address, and port number. Find these in the scanner's Settings → Network → DICOM menu."
+        },
+        {
+          "step": 2,
+          "instruction": "Register the device in Purview or your PACS. Go to Admin → Device Manager → Add New Device. Enter the information from step 1 exactly as it appears on the scanner."
+        },
+        {
+          "step": 3,
+          "instruction": "Configure the scanner's destination. Set up a DICOM destination on the scanner pointing to your Purview or PACS. You'll need the receiving system's AE Title, IP address, and port (typically 104)."
+        },
+        {
+          "step": 4,
+          "instruction": "Run a C-ECHO test from the scanner. This confirms both sides can see each other without sending any patient images."
+        },
+        {
+          "step": 5,
+          "instruction": "Send a test image (most scanners have a phantom or test pattern option) before sending any real patient studies."
+        }
+      ],
+      "success_indicator": "C-ECHO returns success and a test image appears correctly in Purview or your PACS viewer.",
+      "prevention_tip": "When ordering new imaging equipment, ask the vendor to provide DICOM conformance documentation. Share it with HealthMark Support before installation so we can confirm compatibility in advance.",
+      "escalate_if": "The C-ECHO fails after registration, or the new device's image type isn't accepted by the system. Some specialized modalities need an additional configuration step on the receiving end — call us before the installation team leaves.",
+      "patient_safety_flag": false
+    },
+
+    {
+      "id": "hmk-005",
+      "title": "Images transferred fine, but they're in the wrong patient's chart",
+      "severity": "low",
+      "severity_label": "Non-urgent",
+      "category": "Patient matching",
+      "time_estimate": "~10 min",
+      "symptoms": [
+        "wrong patient",
+        "wrong chart",
+        "mismatched",
+        "wrong name",
+        "wrong MRN",
+        "mixed up",
+        "attached to wrong",
+        "patient ID",
+        "mismatch",
+        "incorrect record"
+      ],
+      "symptom_questions": [
+        {
+          "question": "Did the images arrive successfully but appear under the wrong patient?",
+          "answer_yes_points_to": "hmk-005"
+        },
+        {
+          "question": "Is the patient name or MRN on the images different from what you expected?",
+          "answer_yes_points_to": "hmk-005"
+        }
+      ],
+      "plain_summary": "The images transferred successfully, but the patient information embedded in the image file doesn't match what's in your system. The technical transfer worked — but the metadata linked the images to the wrong record. Most often caused by a typo, a maiden vs. married name, or a duplicate patient record.",
+      "cause": "Patient ID mismatch between the scanner's worklist and the main system. The DICOM file carries patient data embedded at scan time — if that data doesn't match the receiving system's records, images land in the wrong chart.",
+      "steps": [
+        {
+          "step": 1,
+          "instruction": "Flag the misattributed images immediately. Add a note or flag in Purview or your PACS so no one reads or reports on them while the correction is in progress."
+        },
+        {
+          "step": 2,
+          "instruction": "Notify your medical records or HIM team. Patient record corrections must go through your facility's established process — do not move the images yourself."
+        },
+        {
+          "step": 3,
+          "instruction": "Compare the patient identifiers — name, date of birth, and MRN — on the scanner's study against the receiving system. Identify exactly where the mismatch is."
+        },
+        {
+          "step": 4,
+          "instruction": "Document everything: which study, which patients, when it was discovered, and who was notified. This is required for compliance and audit purposes."
+        }
+      ],
+      "success_indicator": "Medical records team confirms the correction is complete and the study is properly associated with the correct patient record.",
+      "prevention_tip": "Where possible, use a worklist integration so patient data pulls automatically from your scheduling system instead of being manually typed on the scanner. Manual entry is the primary source of mismatches.",
+      "escalate_if": "This is happening frequently across multiple patients. Recurring mismatches usually indicate a system configuration issue, not human error — contact HealthMark Support so we can identify the root cause.",
+      "patient_safety_flag": true,
+      "patient_safety_note": "Do not correct this yourself by simply moving the images. A patient record correction must be documented and completed through your facility's medical records process to maintain a proper audit trail."
+    }
+  ],
+
+  "symptom_picker_flow": {
+    "opening_question": "What best describes what you're seeing right now?",
+    "options": [
+      {
+        "label": "Scanner says 'Transfer Complete' but images aren't in the system",
+        "points_to": "hmk-001"
+      },
+      {
+        "label": "Scanner shows an error immediately and won't connect at all",
+        "points_to": "hmk-002"
+      },
+      {
+        "label": "Some images arrived but the study looks incomplete",
+        "points_to": "hmk-003"
+      },
+      {
+        "label": "Brand new device that has never been able to send images",
+        "points_to": "hmk-004"
+      },
+      {
+        "label": "Images arrived but they're under the wrong patient",
+        "points_to": "hmk-005"
+      },
+      {
+        "label": "Something else — let me search or describe the problem",
+        "points_to": "search"
+      }
+    ]
+  },
+
+  "glossary": [
+    { "term": "DICOM", "definition": "The universal standard that all medical imaging devices use to store and send images. Every scanner, viewer, and storage system speaks DICOM." },
+    { "term": "PACS", "definition": "Picture Archiving and Communication System. The software that stores and displays medical images. Purview is HealthMark's cloud-based PACS." },
+    { "term": "AE Title", "definition": "Application Entity Title — the unique name tag for each device (max 16 characters, case-sensitive). Both sender and receiver must have matching, approved AE Titles to connect." },
+    { "term": "C-STORE", "definition": "The DICOM command that sends images from one device to another. When your scanner 'sends' a study, it's running C-STORE." },
+    { "term": "C-ECHO", "definition": "A simple ping test for DICOM connections. Use it to verify two devices can talk before sending real patient images." },
+    { "term": "Association", "definition": "The formal handshake before images transfer. If rejected, no data moves — even if the scanner reports 'transfer complete'." },
+    { "term": "Modality", "definition": "The type of imaging device — CT, MRI, X-ray, ultrasound, etc." },
+    { "term": "Study", "definition": "All images from one patient visit. A study contains one or more Series (groups of related images)." },
+    { "term": "Port 104", "definition": "The standard network port DICOM uses by default. Must be open through any firewall between the scanner and the receiving system." },
+    { "term": "Purview Image", "definition": "HealthMark's cloud-based platform for uploading, viewing, sharing, and storing DICOM imaging studies securely from anywhere." }
+  ],
+
+  "contact": {
+    "phone": "1-800-HMK-HELP",
+    "email": "support@healthmark-group.com",
+    "portal": "support.healthmark-group.com",
+    "hours": "Mon–Fri 7am–7pm CST",
+    "after_hours_note": "For urgent patient-care issues, an after-hours line is available."
+  }
+}

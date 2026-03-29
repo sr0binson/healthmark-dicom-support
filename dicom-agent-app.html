@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DICOM Agent Tool — HealthMark Support</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#0d2340;--navy-mid:#1a3a5c;--blue:#1d6fa4;--blue-light:#e8f3fb;--bg:#f0ede6;--white:#fff;--surface:#f7f5f1;--border:#ddd9d0;--bstrong:#c8c3b8;--text:#1a1a1a;--tmid:#4a4a4a;--tmut:#8a8680;--ok-bg:#edf7f2;--ok-b:#27a060;--ok-t:#1a5c36;--wn-bg:#fff8ec;--wn-b:#f0b429;--wn-t:#7a4f00;--dn-bg:#fff1f1;--dn-b:#e05555;--dn-t:#8b1a1a;--amb:#fff8ec;--sans:'IBM Plex Sans',sans-serif;--mono:'IBM Plex Mono',monospace;--r:8px;--s:0 1px 8px rgba(0,0,0,.06)}
+*{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14px;line-height:1.6;min-height:100vh}
+.hdr{background:var(--navy);padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:50px;position:sticky;top:0;z-index:200;border-bottom:2px solid #1d6fa4}
+.logo{display:flex;align-items:center;gap:8px;text-decoration:none}
+.lm{width:26px;height:26px;background:#1d3a5c;border:1px solid #2a5a8c;border-radius:5px;display:flex;align-items:center;justify-content:center}
+.lt{font-size:13px;font-weight:600;color:#fff;letter-spacing:.02em}.lt span{color:#6db4e8}
+.htag{font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.4);letter-spacing:.05em}
+.agent-banner{background:#1a3a5c;border-bottom:1px solid #2a5a8c;padding:.5rem 1.5rem;display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:#6db4e8;letter-spacing:.04em}
+.agent-banner::before{content:'[AGENT]';background:#1d6fa4;color:#fff;padding:1px 7px;border-radius:3px;font-size:10px;letter-spacing:.06em}
+.pw{max-width:760px;margin:0 auto;padding:1.5rem 1.5rem 4rem}
+.mtabs{display:flex;background:var(--white);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:1.25rem;box-shadow:var(--s)}
+.mtab{flex:1;padding:.7rem .85rem;font-family:var(--sans);font-size:13px;font-weight:500;border:none;background:none;cursor:pointer;color:var(--tmut);transition:all .15s;border-right:1px solid var(--border);display:flex;align-items:center;justify-content:center;gap:5px}
+.mtab:last-child{border-right:none}.mtab:hover{background:var(--surface);color:var(--text)}.mtab.active{background:var(--navy);color:#fff}
+.panel{display:none}.panel.active{display:block}
+.pprompt{font-size:14px;font-weight:500;color:var(--navy);margin-bottom:.75rem}
+.popts{display:flex;flex-direction:column;gap:6px}
+.popt{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:.75rem 1rem;cursor:pointer;font-size:13px;color:var(--tmid);font-family:var(--sans);text-align:left;width:100%;transition:all .12s;display:flex;align-items:center;justify-content:space-between;gap:10px;box-shadow:var(--s)}
+.popt:hover{border-color:var(--blue);color:var(--navy);background:var(--blue-light)}
+.swrap{position:relative;margin-bottom:.75rem}
+.swrap input{width:100%;padding:.65rem .9rem .65rem 2.3rem;font-family:var(--sans);font-size:13px;border:1px solid var(--border);border-radius:var(--r);background:var(--white);color:var(--text);outline:none;transition:border-color .12s,box-shadow .12s;box-shadow:var(--s)}
+.swrap input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(29,111,164,.1)}
+.sico{position:absolute;left:.7rem;top:50%;transform:translateY(-50%);font-size:14px;color:var(--tmut);pointer-events:none}
+.shint{font-family:var(--mono);font-size:11px;color:var(--tmut);margin-bottom:.75rem}.shint strong{color:var(--tmid)}
+.sres{display:flex;flex-direction:column;gap:6px}
+.sri{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:.75rem 1rem;cursor:pointer;transition:all .12s;box-shadow:var(--s);display:flex;align-items:center;gap:10px}
+.sri:hover{border-color:var(--blue)}
+.srdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.srb{flex:1;min-width:0}.srt{font-size:13px;font-weight:500;color:var(--navy);margin-bottom:2px}
+.srm{display:flex;gap:5px;flex-wrap:wrap}
+.nores{text-align:center;padding:1.5rem;font-size:13px;color:var(--tmut);background:var(--white);border:1px solid var(--border);border-radius:var(--r)}
+.dbk{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--blue);background:none;border:none;cursor:pointer;font-family:var(--sans);padding:0;margin-bottom:.9rem}
+.dbk:hover{color:var(--navy)}
+.dcard{background:var(--white);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--s)}
+.dhdr{padding:1rem 1.1rem;border-left:4px solid var(--blue)}
+.dcard.sv-high .dhdr{border-left-color:#e05555}.dcard.sv-med .dhdr{border-left-color:#f0b429}.dcard.sv-low .dhdr{border-left-color:#27a060}
+.dtitle{font-size:15px;font-weight:600;color:var(--navy);margin-bottom:.45rem;line-height:1.3}
+.dtags{display:flex;gap:5px;flex-wrap:wrap}
+.tag{font-size:10px;padding:2px 7px;border-radius:2px;font-weight:600;letter-spacing:.03em;text-transform:uppercase}
+.th{background:var(--dn-bg);color:var(--dn-t)}.tm{background:var(--wn-bg);color:var(--wn-t)}.tl{background:var(--ok-bg);color:var(--ok-t)}.tp{background:var(--blue-light);color:var(--blue)}.tt{background:var(--surface);color:var(--tmut);border:1px solid var(--border)}
+.tiers{display:flex;border-bottom:1px solid var(--border);background:var(--surface)}
+.tier-tab{flex:1;padding:.65rem .5rem;font-family:var(--sans);font-size:12px;font-weight:500;border:none;background:none;cursor:pointer;color:var(--tmut);border-right:1px solid var(--border);border-bottom:2px solid transparent;transition:all .12s;display:flex;flex-direction:column;align-items:center;gap:2px}
+.tier-tab:last-child{border-right:none}
+.tier-tab:hover{color:var(--text);background:var(--bg)}
+.tier-tab.active{color:var(--navy);background:var(--white);border-bottom-color:var(--blue)}
+.tier-tab.active.t-basic{border-bottom-color:#27a060}
+.tier-tab.active.t-inv{border-bottom-color:#f0b429}
+.tier-tab.active.t-esc{border-bottom-color:#e05555}
+.tier-label{font-size:10px;text-transform:uppercase;letter-spacing:.06em;opacity:.6}
+.tier-panel{display:none;padding:1rem 1.1rem}.tier-panel.active{display:block}
+.sl{font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--tmut);margin-bottom:.4rem;margin-top:1rem}
+.sl:first-child{margin-top:0}
+.pt{font-size:13px;color:var(--tmid);line-height:1.65;margin-bottom:.4rem}.pt strong{color:var(--text);font-weight:500}
+.steps{list-style:none;counter-reset:sc;margin:.3rem 0}
+.steps li{counter-increment:sc;display:flex;gap:9px;margin-bottom:.7rem;font-size:13px;color:var(--tmid);line-height:1.6;align-items:flex-start}
+.steps li::before{content:counter(sc);background:var(--navy);color:#fff;font-size:10px;font-weight:600;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.steps li strong{color:var(--text);font-weight:500}
+.cmd{background:#1a1917;color:#6da4e0;font-family:var(--mono);font-size:12px;padding:.55rem .8rem;border-radius:5px;margin:.35rem 0;display:block;white-space:pre;overflow-x:auto;position:relative}
+.cmd-label{font-family:var(--mono);font-size:10px;color:var(--tmut);margin-top:.85rem;margin-bottom:.2rem;letter-spacing:.04em}
+.cmd-exp{font-size:12px;color:var(--tmid);line-height:1.55;margin-top:.35rem;padding-left:.5rem;border-left:2px solid var(--border)}
+.cmd-exp strong{color:var(--text);font-weight:500}
+.alrt{display:flex;gap:8px;padding:.7rem .85rem;border-radius:5px;font-size:12px;line-height:1.55;margin-top:.7rem;border:1px solid transparent}
+.aico{font-size:13px;flex-shrink:0;margin-top:1px}
+.aok{background:var(--ok-bg);border-color:var(--ok-b);color:var(--ok-t)}.awn{background:var(--wn-bg);border-color:var(--wn-b);color:var(--wn-t)}.adn{background:var(--dn-bg);border-color:var(--dn-b);color:var(--dn-t)}
+.alrt strong{font-weight:600}
+.esc-list{list-style:none;margin:.3rem 0;display:flex;flex-direction:column;gap:6px}
+.esc-list li{display:flex;gap:8px;font-size:13px;color:var(--tmid);line-height:1.55;align-items:flex-start;padding:.6rem .75rem;background:var(--dn-bg);border:1px solid var(--dn-b);border-radius:5px}
+.esc-list li::before{content:'↑';color:var(--dn-t);font-weight:600;flex-shrink:0}
+.fix-box{background:var(--ok-bg);border:1px solid var(--ok-b);border-radius:5px;padding:.75rem .9rem;margin-top:.75rem;font-size:13px;color:var(--ok-t);line-height:1.6}
+.fix-box strong{font-weight:600;display:block;margin-bottom:2px}
+.eto{background:var(--navy);color:rgba(255,255,255,.8);border-radius:5px;padding:.65rem .85rem;margin-top:.65rem;font-size:12px;font-family:var(--mono);letter-spacing:.02em}
+.eto strong{color:#6db4e8}
+.cbar{background:var(--navy);border-radius:var(--r);padding:.85rem 1rem;margin-top:1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;font-size:12px;color:rgba(255,255,255,.75)}
+.cbar strong{color:#fff}
+.ft{text-align:center;padding:1rem;font-family:var(--mono);font-size:11px;color:var(--tmut);border-top:1px solid var(--border);background:var(--white);margin-top:2rem;letter-spacing:.03em}
+</style>
+</head>
+<body>
+<header class="hdr">
+  <a class="logo" href="#">
+    <div class="lm"><svg viewBox="0 0 24 24" fill="none" stroke="#6db4e8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+    <span class="lt">HealthMark <span>Agent Console</span></span>
+  </a>
+  <span class="htag">DICOM // Internal Use Only</span>
+</header>
+<div class="agent-banner">DICOM Transfer Diagnostic · Support Agent Tool · Not for customer distribution</div>
+
+<div class="pw">
+  <div class="mtabs">
+    <button class="mtab active" onclick="sm('picker',this)">☰ Pick by symptom</button>
+    <button class="mtab" onclick="sm('search',this)">⌕ Search issue</button>
+  </div>
+
+  <div id="panel-picker" class="panel active">
+    <div id="pv">
+      <p class="pprompt" id="pprompt"></p>
+      <div class="popts" id="popts"></div>
+    </div>
+    <div id="dv-picker" style="display:none"></div>
+  </div>
+
+  <div id="panel-search" class="panel">
+    <div class="swrap">
+      <span class="sico">⌕</span>
+      <input type="text" id="sinput" placeholder="Search by error, symptom, or keyword…" oninput="hs(this.value)" autocomplete="off">
+    </div>
+    <p class="shint" id="shint"><strong>ASSOC-RJ</strong> · <strong>port 104</strong> · <strong>partial transfer</strong> · <strong>SOP class</strong> · <strong>new device</strong></p>
+    <div id="sres" class="sres"></div>
+    <div id="dv-search" style="display:none"></div>
+  </div>
+
+  <div class="cbar">
+    <div><strong>Tier 2 escalation:</strong> <span id="cbph"></span></div>
+    <div><strong>Portal:</strong> <span id="cbpo"></span></div>
+    <div id="cbhr"></div>
+  </div>
+</div>
+
+<footer class="ft">HealthMark Group · Agent Diagnostic Console · Internal Use Only · v2.0 · 2026</footer>
+
+<script>
+const KB={"_meta":{"title":"HealthMark DICOM Transfer Troubleshooting Knowledge Base","version":"2.0","audience":"Powers both customer-facing and agent-facing diagnostic tools","last_updated":"2026-03-29","maintainer":"HealthMark Support Team","notes":"To add or update an issue, copy an existing issue block and edit the fields. Do not change the field names \u2014 both apps read them exactly as written."},"contact":{"phone":"1-800-HMK-HELP","email":"support@healthmark-group.com","portal":"support.healthmark-group.com","hours":"Mon\u2013Fri 7am\u20137pm CST","after_hours_note":"For urgent patient-care issues, an after-hours line is available."},"issues":[{"id":"hmk-001","title":"Scanner says Transfer Complete, but images never arrived","severity":"high","severity_label":"Urgent","category":"AE Title / Name tag","time_estimate":"~15 min","symptoms":["transfer complete","images missing","not in system","can't find scan","association rejected","ASSOC-RJ","name tag","AE title","disappeared","maintenance","nothing arrived","sent but not there"],"customer":{"plain_summary":"Your scanner thinks it finished sending \u2014 but the receiving system refused the connection before any images moved. This almost always happens after overnight IT maintenance.","safe_checks":["Look at the scanner screen \u2014 write down the exact error message word for word.","Check whether this happened to just one study or every study sent today.","Ask your IT team or coworker: was any maintenance done on the network or computers last night?","Try sending a new test study if your scanner has that option \u2014 see if it fails the same way."],"tell_support":["The exact wording of the error on the scanner screen","What time the problem started","Whether maintenance happened recently","How many studies are affected"],"go_deeper_summary":"The receiving system has a list of approved devices. Each device has a unique name tag called an AE Title. If that name was changed \u2014 even by one character \u2014 the connection gets refused. The scanner doesn't know this happened, so it reports success anyway.","go_deeper_steps":["On your scanner, find Settings \u2192 Network \u2192 DICOM Configuration. Look for something called 'Calling AE Title' \u2014 write it down exactly, including underscores and numbers.","Log into your Purview dashboard \u2192 Device Manager. Find your scanner in the list and compare the name to what you wrote down. They need to match exactly \u2014 AE Titles are case-sensitive."],"patient_safety_flag":false},"agent":{"plain_summary":"Classic AE Title rejection. The PACS or Purview refused the association before C-STORE ran. Scanner reports success because it completed its side of the attempt. Almost always caused by a maintenance script silently renaming the AE entry.","basic":["Ask the caller: what does the scanner screen say exactly? Look for 'Association Rejected' or 'ASSOC-RJ'.","Ask: did this start after overnight maintenance? If yes, AE Title rename is 95% likely.","Confirm: is it affecting all studies or just specific ones? All = config issue. Specific = possibly SOP class mismatch (see hmk-004).","Ask them to read you the Calling AE Title from the scanner: Settings \u2192 Network \u2192 DICOM Configuration \u2192 Calling AE Title."],"investigative":["Pull up the PACS or Purview admin console \u2192 Device Manager \u2192 Accepted AE Titles. Compare the scanner's Calling AE Title character by character \u2014 AE Titles are case-sensitive and max 16 chars.","Common mismatches to look for: dropped leading zeros (CT_SCANNER_1 vs CT_SCANNER_01), case change (ct_scanner vs CT_SCANNER), trailing spaces (invisible but fatal).","Run a C-ECHO from the scanner to confirm: Scanner DICOM Tools \u2192 Echo/Verify \u2192 select destination \u2192 Send. Expected output: Status 0000H = success. Anything else = association still failing.","Check the PACS event log for the rejection timestamp. Path varies by vendor \u2014 look for 'Association Rejected' entries around the time transfers failed. The log will show which AE Title was presented vs which was expected.","If you have CLI access: use a DICOM toolkit (storescu/echoscu from DCMTK) to test from a known-good machine: echoscu -aet TEST_SCU -aec PACS_MAIN 192.168.x.x 104"],"escalate":["AE Titles match on both sides but association still fails \u2014 check for IP/port mismatch or TLS negotiation issue (see hmk-002).","PACS admin console is inaccessible or locked \u2014 needs senior admin or vendor support.","Multiple sites affected simultaneously \u2014 likely a central config push or network change, escalate to infrastructure team.","Maintenance script is recurring and keeps renaming AE entries \u2014 needs a permanent fix in the script, involve whoever owns the maintenance automation."],"fix":"Correct the AE Title in PACS Device Manager to match exactly what the scanner sends. Restart the DICOM listener service if the PACS requires it. Confirm with C-ECHO before asking caller to retransmit. Have caller check Failed Transfers queue and resend.","escalate_to":"Senior PACS admin or HealthMark Tier 2 if AE titles match and issue persists."}},{"id":"hmk-002","title":"Scanner shows an error immediately \u2014 won't even try to connect","severity":"high","severity_label":"Urgent","category":"Network connection","time_estimate":"~20 min","symptoms":["connection refused","host unreachable","cannot connect","network error","fails immediately","timeout","firewall","port","IP address","won't connect","error right away","no route"],"customer":{"plain_summary":"The scanner can't even reach the system it's trying to send to. Something on the network is blocking the connection \u2014 this usually needs your IT team.","safe_checks":["Write down the exact error message on the scanner screen.","Check: are ALL scanners affected, or just this one?","Check: can you open Purview in a web browser from a nearby computer? If not, the whole system may be down.","Try turning the scanner off and back on \u2014 sometimes a restart clears a stale connection."],"tell_support":["The exact error message","Whether one scanner or all scanners are affected","Whether Purview is accessible from a browser","Whether any IT work happened recently"],"go_deeper_summary":"Unlike most transfer errors, this one happens before any images even try to move. The scanner and the receiving system can't establish a basic network connection \u2014 like a phone call that won't ring through. It's usually a firewall rule, a wrong IP address, or the receiving service being offline.","go_deeper_steps":["Look at your scanner's DICOM destination settings and find the IP address it's trying to reach. Write it down.","Ask your IT team to confirm that IP address is still correct \u2014 sometimes servers get new addresses after maintenance.","Ask your IT team to check whether port 104 is open between the scanner and the receiving system. That's the standard door DICOM uses."],"patient_safety_flag":true,"patient_safety_note":"If ALL scanners are down and no images can transfer anywhere, call HealthMark Support immediately. Do not wait to troubleshoot."},"agent":{"plain_summary":"Network-layer failure \u2014 the DICOM association never even starts. Could be wrong IP, blocked port, or PACS/Purview service down. Distinguish from AE Title rejection (hmk-001) by timing: this fails before any handshake.","basic":["Ask: does the error appear immediately (within 1-2 seconds)? Yes = network issue. Delayed = likely AE Title rejection (hmk-001).","Ask: are all scanners affected or just one? All = central service or network issue. One = that scanner's config.","Ask: can they open Purview in a browser from the same network? If no, Purview service may be down \u2014 check status dashboard.","Ask: what is the destination IP address configured on the scanner? Have them read it to you from Settings \u2192 Network \u2192 DICOM Destinations."],"investigative":["Ping the PACS/Purview server from a machine on the same network segment as the scanner. Open Command Prompt (Windows: Start \u2192 type cmd \u2192 Enter) and type: ping 192.168.x.x (use the actual IP). Expected output: 4 reply lines with times like '32ms'. If you see 'Request timed out' or 'Destination host unreachable', the network path is broken \u2014 not a DICOM issue.","Test the DICOM port specifically. In Command Prompt type: telnet 192.168.x.x 104 \u2014 if it connects you'll see a blank screen (that's correct \u2014 press Ctrl+] to exit). If it says 'Could not open connection', port 104 is blocked. Note: telnet may need to be enabled on Windows via Control Panel \u2192 Programs \u2192 Turn Windows features on/off \u2192 Telnet Client.","Check whether the DICOM listener service is running on the PACS. In Windows Services (Start \u2192 type services.msc \u2192 Enter), look for the PACS service name (varies by vendor \u2014 common ones: 'Synapse DICOM', 'Sectra IDS7', 'Purview Listener'). Status should show 'Running'. If stopped, right-click \u2192 Start.","Check firewall change logs for the past 48 hours. In Windows Firewall with Advanced Security, look under Inbound Rules for port 104 (TCP). If the rule was disabled or deleted, re-enable it or add: Protocol TCP, Local Port 104, Action Allow.","If using Purview cloud: check healthmark-group.com status page and Purview service health. Cloud outages won't show as local network issues."],"escalate":["Ping fails from multiple network segments \u2014 routing issue, needs network/infrastructure team.","Port 104 is blocked and you don't have firewall access \u2014 needs network admin.","PACS service won't start or crashes on restart \u2014 needs PACS vendor support.","All scanners at multiple sites affected simultaneously \u2014 possible Purview cloud outage, escalate to HealthMark Tier 2 immediately."],"fix":"Restore correct IP in scanner config, re-open port 104 in firewall, or restart DICOM listener service \u2014 whichever the investigation identified. Confirm with ping then C-ECHO before asking caller to resend.","escalate_to":"Network/infrastructure team for firewall issues. HealthMark Tier 2 for Purview cloud issues."}},{"id":"hmk-003","title":"Only some images arrived \u2014 the study looks incomplete","severity":"med","severity_label":"Moderate","category":"Partial transfer","time_estimate":"~30 min","symptoms":["partial","incomplete","missing slices","only some images","cut off","stopped partway","not all there","fewer images","timeout","large study","CT","MRI","half there"],"customer":{"plain_summary":"Some images made it through but not all of them. The study is incomplete and cannot be read safely until the full thing arrives.","safe_checks":["Flag the study as incomplete in your system right now \u2014 add a note so no one reads it.","Count how many images arrived versus how many the scanner shows for that study.","Check: was this a large study \u2014 like a detailed CT scan or full MRI?","Do not delete anything yet \u2014 leave it as-is until support advises."],"tell_support":["How many images arrived vs how many were expected","What type of scan it was (CT, MRI, X-ray, etc.)","Whether you've flagged it as incomplete","Whether this has happened before with large studies"],"go_deeper_summary":"Large studies have hundreds of individual image files. The transfer was interrupted partway through \u2014 either by a brief network hiccup or a time limit that was set too short. The fix is usually to resend, but you need to clean up the partial study first.","go_deeper_steps":["In Purview or your PACS, find the incomplete study and mark it as 'Incomplete' or 'Do Not Read' \u2014 your system may have a flag or status field for this.","Delete the partial study from the receiving system before resending \u2014 this prevents confusion between the broken version and the complete one.","Go to your scanner's resend queue (usually called 'Failed Transfers' or 'Unsent Studies') and resend the full study. Stay nearby and watch until it finishes."],"patient_safety_flag":true,"patient_safety_note":"A partial study must never be read or reported on. Flag it as incomplete immediately so it cannot enter the radiologist's reading queue."},"agent":{"plain_summary":"Transfer started successfully but association dropped mid-study. Common causes: network instability, DICOM association timeout too short for large studies, or near-full storage on receiving end. Distinguish from full failure (hmk-002) \u2014 some images arrived.","basic":["Confirm patient safety first: ask if the incomplete study has been flagged. If not, walk them through flagging it before anything else.","Get the numbers: how many images arrived vs how many the scanner log shows. The ratio tells you roughly where the transfer broke.","Ask: is this a large study (CT with 200+ slices, full-body MRI)? Large studies are most vulnerable to timeout-based drops.","Ask: has this happened before, or is this the first time? Recurring = config issue. First time = likely transient network event."],"investigative":["Check PACS storage capacity. In the PACS admin dashboard look for disk usage \u2014 if over 85% full, mid-transfer failures are common. Path varies by system; look for 'Storage' or 'System Health' in admin menu.","Check the DICOM association timeout setting on the PACS. It should be at least 300 seconds (5 minutes) for large studies. If set to 60s or less, high-slice CTs will always fail. Location: PACS Admin \u2192 DICOM Settings \u2192 Association Timeout.","Review the PACS transfer log around the failure time. Look for the last successful C-STORE-RSP before the drop \u2014 the status code tells you why it stopped. A7xx = out of resources (storage). 0000H followed by silence = network drop. B000 = coercion warning (usually benign).","Test network stability: run a continuous ping during a test transfer. In Command Prompt type: ping 192.168.x.x -t (the -t keeps it running). Watch for any 'Request timed out' lines during the transfer \u2014 even one or two indicates packet loss that will kill large transfers.","Ask caller to delete the partial study from PACS first, then resend from the scanner's Failed Transfers queue. Monitor slice count in PACS in real time if possible."],"escalate":["Retransmit fails at the exact same slice count repeatedly \u2014 consistent break point suggests a specific file is corrupted on the scanner. Needs vendor scanner support.","Storage is full and you can't free space or expand \u2014 needs storage admin or HealthMark infrastructure team.","Network packet loss is consistent and not resolving \u2014 needs network team.","Timeout settings are correct but large studies still fail \u2014 may need DICOM buffer size adjustment, escalate to PACS vendor."],"fix":"Clear the partial study from PACS, adjust timeout if needed, confirm storage space, then have caller resend. Verify final slice count matches scanner log before releasing to radiologist.","escalate_to":"Storage admin for capacity issues. PACS vendor for timeout config. Network team for persistent packet loss."}},{"id":"hmk-004","title":"New scanner or device can't send images at all","severity":"med","severity_label":"Moderate","category":"New device setup","time_estimate":"~45 min","symptoms":["new scanner","new device","new modality","just installed","never worked","not registered","setup","brand new","ultrasound","x-ray","added equipment","first time"],"customer":{"plain_summary":"New devices aren't automatically trusted by the system. Before your new scanner can send images, it has to be introduced \u2014 both sides need to know about each other. This is normal setup, not a malfunction.","safe_checks":["Confirm: has this scanner ever successfully sent images, or is it brand new?","Check whether your IT team or the equipment vendor set up the DICOM connection when the scanner was installed.","Look on the scanner for a DICOM settings or network configuration menu \u2014 this is where connection details live."],"tell_support":["The scanner make and model","Whether it was just installed or has been there a while","Whether the vendor or IT team configured it","Any error messages on the screen"],"go_deeper_summary":"Every device needs a name tag (AE Title) registered on both sides before they can talk. The scanner needs to know where to send images, and the receiving system needs to know to expect images from this scanner.","go_deeper_steps":["On the new scanner, find Settings \u2192 Network \u2192 DICOM Configuration. Write down: the AE Title, IP address, and port number.","Log into your Purview dashboard \u2192 Device Manager \u2192 Add New Device. Enter those details exactly as they appear on the scanner.","On the scanner, set up a DICOM destination pointing to Purview. You'll need Purview's AE Title, IP address, and port \u2014 HealthMark Support can give you these."],"patient_safety_flag":false},"agent":{"plain_summary":"New device not registered in PACS/Purview. Both sides need mutual AE Title registration before any connection is possible. May also involve SOP Class issues if the modality type is new to this PACS.","basic":["Confirm: has this device ever worked, or is it freshly installed? Never worked = setup issue. Worked before = regression (check hmk-001).","Ask for the scanner's DICOM info: AE Title, IP address, port. They'll find it under Settings \u2192 Network \u2192 DICOM Configuration (exact path varies by vendor).","Check whether the device exists in PACS/Purview Device Manager at all. If it's not listed, it was never registered.","Ask whether the equipment vendor was supposed to handle DICOM setup \u2014 sometimes vendors configure the scanner side but forget to register it on the PACS side."],"investigative":["Register the device in PACS/Purview: Admin \u2192 Device Manager \u2192 Add New Device. Enter the scanner's AE Title, IP, and port exactly as reported. Save and restart the DICOM listener if required.","Configure the scanner's destination: on the scanner add a new DICOM destination with the PACS/Purview AE Title, IP (get this from Purview admin or PACS settings), and port 104 (or 2762 for TLS).","Run C-ECHO from the scanner after registration. Success (0000H) = both sides recognize each other. Failure = double-check AE Title spelling on both sides.","If C-ECHO passes but image transfer fails with error 0122H, the issue is SOP Class \u2014 the PACS doesn't accept this modality type yet. Check: PACS Admin \u2192 Storage \u2192 Accepted SOP Classes. For a new ultrasound unit, you may need to add SOP UID 1.2.840.10008.5.1.4.1.1.3.1. Vendor's DICOM Conformance Statement lists all required UIDs.","Verify network connectivity between the new device and PACS/Purview using ping before spending time on DICOM config \u2014 sometimes new equipment lands on a different network segment."],"escalate":["C-ECHO fails after correct registration on both sides \u2014 check for network segment/VLAN isolation, may need network team.","SOP Class not in PACS accepted list and you can't add it \u2014 needs PACS admin or vendor.","Scanner vendor's DICOM Conformance Statement shows non-standard implementation \u2014 needs PACS vendor to assess compatibility.","New device is on a different VLAN than the PACS \u2014 needs network team to open routing between segments."],"fix":"Register device on both sides, run C-ECHO to confirm, send test image (phantom/test pattern) before any patient studies. Document AE Title, IP, and port in your device registry.","escalate_to":"PACS admin for SOP Class additions. Network team for VLAN/segment issues. Equipment vendor for DICOM conformance questions."}},{"id":"hmk-005","title":"Images transferred fine, but they're in the wrong patient's chart","severity":"low","severity_label":"Non-urgent","category":"Patient matching","time_estimate":"~10 min","symptoms":["wrong patient","wrong chart","mismatched","wrong name","wrong MRN","mixed up","attached to wrong","patient ID","mismatch","incorrect record","wrong person"],"customer":{"plain_summary":"The images arrived successfully, but they ended up under the wrong patient's name. The technical transfer worked \u2014 the patient information attached to the images just didn't match your system's records.","safe_checks":["Flag the misattributed images right now \u2014 add a note so no one reads them.","Do not move the images yourself \u2014 this needs to go through your medical records team.","Write down: which study, which patient the images landed under, and which patient they should belong to.","Note the time you discovered this."],"tell_support":["Which study is affected (date, type of scan)","The patient name/MRN the images are under vs where they should be","Whether this has happened before","Whether your facility uses a worklist (automatic patient data) or manual entry on the scanner"],"go_deeper_summary":"Every DICOM image file has patient information baked in at scan time. If the name or ID typed on the scanner doesn't exactly match your main system, the images land in the wrong place. Manual data entry is the most common cause.","go_deeper_steps":["Compare the patient name, date of birth, and MRN on the scanner's study log versus what's in Purview or your PACS \u2014 find exactly where the mismatch is.","Notify your medical records or HIM team \u2014 they have the correct process and authority to fix patient record errors.","Document everything: study details, both patient records involved, time discovered, who was notified. This is required for compliance."],"patient_safety_flag":true,"patient_safety_note":"Do not correct this yourself by moving the images. Patient record corrections must go through your facility's medical records process to maintain a proper audit trail."},"agent":{"plain_summary":"Patient ID mismatch \u2014 DICOM metadata embedded at scan time doesn't match the ADT/MPI in the receiving system. Transfer succeeded technically; this is a data quality issue. Recurring cases usually indicate missing worklist integration.","basic":["Confirm safety first: are the images flagged? Walk them through flagging if not.","Get the specifics: study date, scan type, patient name/MRN on the images vs where they should be.","Ask: does the scanner pull patient data automatically from a worklist, or does staff type it in manually? Manual entry = most likely cause.","Ask: has this happened before, with other patients? Recurring = systemic issue."],"investigative":["Pull the DICOM header from the misrouted study. In Purview or PACS, open the study properties and look for patient tags: (0010,0010) Patient Name, (0010,0020) Patient ID, (0010,0030) DOB. Compare these to the correct patient record in your MPI/ADT system.","Identify the discrepancy type: name typo (manual entry error), DOB format mismatch (MM/DD/YYYY vs YYYYMMDD), duplicate MRN (two records for same patient), or maiden vs married name.","Check scanner worklist configuration: does the scanner have a DICOM Worklist (DICOM MWL) configured? If not, staff are entering patient data by hand \u2014 this will keep happening. MWL pulls patient data automatically from the scheduling system.","For the immediate fix: notify the facility's HIM/medical records team with full details. They handle patient record corrections per their compliance process \u2014 do not correct it yourself or instruct the caller to move images.","Document: study UID (from DICOM header), both patient records involved, timestamp, and who was notified. You may need this for a compliance report."],"escalate":["Multiple patients affected \u2014 possible systematic MPI mismatch or broken worklist feed, escalate to HealthMark Tier 2.","Suspected worklist (MWL) misconfiguration \u2014 needs PACS admin or HealthMark implementation team.","Facility doesn't have a HIM/medical records process for this \u2014 escalate to HealthMark compliance team for guidance.","The images have already been read and reported on incorrectly \u2014 this is a clinical risk event, escalate immediately to HealthMark Tier 2 and advise caller to notify their risk management team."],"fix":"Immediate: flag study, notify HIM team, document fully. Long-term: assess whether DICOM MWL integration would prevent recurrence \u2014 raise with HealthMark implementation team.","escalate_to":"HIM/medical records team at the facility for the immediate correction. HealthMark Tier 2 for recurring or multi-patient events. HealthMark compliance team if a report has already been made on misattributed images."}}],"symptom_picker_flow":{"opening_question":"What best describes what you're seeing right now?","options":[{"label":"Scanner says 'Transfer Complete' but images aren't in the system","points_to":"hmk-001"},{"label":"Scanner shows an error immediately and won't connect at all","points_to":"hmk-002"},{"label":"Some images arrived but the study looks incomplete","points_to":"hmk-003"},{"label":"Brand new device that has never been able to send images","points_to":"hmk-004"},{"label":"Images arrived but they're under the wrong patient","points_to":"hmk-005"},{"label":"Something else \u2014 let me search or describe the problem","points_to":"search"}]},"glossary":[{"term":"DICOM","definition":"The universal standard all medical imaging devices use to store and send images."},{"term":"PACS","definition":"Picture Archiving and Communication System \u2014 the software that stores and displays medical images. Purview is HealthMark's cloud-based PACS."},{"term":"AE Title","definition":"Application Entity Title \u2014 a unique name tag for each device (max 16 characters, case-sensitive). Both devices must recognize each other's AE Title to connect."},{"term":"C-STORE","definition":"The DICOM command that sends images from one device to another."},{"term":"C-ECHO","definition":"A quick test that confirms two DICOM devices can communicate \u2014 like a ping, but for medical imaging."},{"term":"Association","definition":"The handshake before images transfer. If rejected, nothing moves \u2014 even if the scanner says 'Transfer Complete'."},{"term":"SOP Class UID","definition":"A code that identifies the type of image being sent (CT, MRI, ultrasound, etc.). The receiving system must be configured to accept each type."},{"term":"Port 104","definition":"The standard network port DICOM uses. Must be open through any firewall between scanner and receiving system."},{"term":"MWL","definition":"DICOM Modality Worklist \u2014 automatically sends patient data from the scheduling system to the scanner, preventing manual entry errors."},{"term":"Purview Image","definition":"HealthMark's cloud platform for uploading, viewing, sharing, and storing DICOM studies securely from anywhere."}]};
+const c=KB.contact;
+document.getElementById('cbph').textContent=c.phone;
+document.getElementById('cbpo').textContent=c.portal;
+document.getElementById('cbhr').textContent=c.hours;
+
+function sm(m,btn){
+  document.querySelectorAll('.mtab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+m).classList.add('active');
+  if(m==='search')setTimeout(()=>document.getElementById('sinput').focus(),50);
+}
+
+const flow=KB.symptom_picker_flow;
+document.getElementById('pprompt').textContent='What is the caller describing?';
+const pc=document.getElementById('popts');
+flow.options.forEach(o=>{
+  const b=document.createElement('button');
+  b.className='popt';
+  b.innerHTML='<span>'+e(o.label)+'</span><span style="color:var(--tmut);font-size:12px">→</span>';
+  b.onclick=()=>{
+    if(o.points_to==='search'){sm('search',document.querySelectorAll('.mtab')[1]);document.getElementById('sinput').focus();}
+    else{const iss=KB.issues.find(i=>i.id===o.points_to);if(iss)sd(iss,'picker');}
+  };
+  pc.appendChild(b);
+});
+
+function hs(q){
+  const de=document.getElementById('dv-search'),re=document.getElementById('sres');
+  de.style.display='none';de.innerHTML='';
+  const qt=q.trim().toLowerCase();
+  if(qt.length<2){re.innerHTML='';return;}
+  const m=KB.issues.filter(iss=>{
+    const ag=iss.agent;
+    const h=[iss.title,ag.plain_summary,iss.category,...iss.symptoms,...ag.basic,...ag.investigative,...ag.escalate,ag.fix].join(' ').toLowerCase();
+    return qt.split(' ').every(w=>h.includes(w));
+  });
+  re.innerHTML='';
+  if(!m.length){re.innerHTML='<div class="nores">No matches for "'+e(q)+'".</div>';return;}
+  m.forEach(iss=>{
+    const it=document.createElement('div');it.className='sri';
+    const dc=iss.severity==='high'?'#e05555':iss.severity==='med'?'#f0b429':'#27a060';
+    it.innerHTML='<div class="srdot" style="background:'+dc+'"></div><div class="srb"><div class="srt">'+e(iss.title)+'</div><div class="srm">'+st(iss)+'<span class="tag tp">'+e(iss.category)+'</span><span class="tag tt">'+e(iss.time_estimate)+'</span></div></div><span style="color:var(--tmut);font-size:12px">→</span>';
+    it.onclick=()=>sd(iss,'search');
+    re.appendChild(it);
+  });
+}
+
+function sd(iss,src){
+  const ci='dv-'+src,hi=src==='picker'?'pv':'sres';
+  document.getElementById(hi).style.display='none';
+  if(src==='search'){const i=document.getElementById('sinput');if(i)i.style.display='none';const h=document.getElementById('shint');if(h)h.style.display='none';}
+  const el=document.getElementById(ci);
+  el.style.display='block';
+  el.innerHTML=rd(iss,src);
+  el.scrollIntoView({behavior:'smooth',block:'start'});
+  // wire tier tabs
+  el.querySelectorAll('.tier-tab').forEach(t=>{
+    t.addEventListener('click',()=>{
+      el.querySelectorAll('.tier-tab').forEach(x=>x.classList.remove('active'));
+      el.querySelectorAll('.tier-panel').forEach(x=>x.classList.remove('active'));
+      t.classList.add('active');
+      el.querySelector('#tp-'+t.dataset.tier).classList.add('active');
+    });
+  });
+}
+
+function bk(src){
+  const ci='dv-'+src,si=src==='picker'?'pv':'sres';
+  document.getElementById(ci).style.display='none';document.getElementById(ci).innerHTML='';
+  document.getElementById(si).style.display='';
+  if(src==='search'){const i=document.getElementById('sinput');if(i)i.style.display='';const h=document.getElementById('shint');if(h)h.style.display='';}
+}
+
+function rd(iss,src){
+  const ag=iss.agent;
+  const basicHtml=ag.basic.map(s=>'<li><span>'+e(s)+'</span></li>').join('');
+
+  // investigative — detect command blocks (lines starting with special markers)
+  const invHtml=ag.investigative.map(s=>{
+    // split on newlines to find embedded commands
+    const lines=s.split('\n');
+    let out='<li><span>';
+    lines.forEach((ln,i)=>{
+      if(i===0){out+=e(ln);}
+      else if(ln.trim().startsWith('echoscu')||ln.trim().startsWith('ping')||ln.trim().startsWith('telnet')||ln.trim().match(/^[a-z]+\s+[\d\.]+/)){
+        out+='</span><code class="cmd">'+e(ln.trim())+'</code><span>';
+      } else {out+='<br>'+e(ln);}
+    });
+    out+='</span></li>';
+    return out;
+  }).join('');
+
+  const escHtml=ag.escalate.map(s=>'<li>'+e(s)+'</li>').join('');
+
+  return '<button class="dbk" onclick="bk(\''+src+'\')">← Back</button>'+
+    '<div class="dcard sv-'+iss.severity+'">'+
+      '<div class="dhdr"><div class="dtitle">'+e(iss.title)+'</div>'+
+      '<div class="dtags">'+st(iss)+'<span class="tag tp">'+e(iss.category)+'</span><span class="tag tt">'+e(iss.time_estimate)+'</span></div></div>'+
+      '<div class="tiers">'+
+        '<button class="tier-tab t-basic active" data-tier="basic"><span>Basic</span><span class="tier-label">First response</span></button>'+
+        '<button class="tier-tab t-inv" data-tier="inv"><span>Investigative</span><span class="tier-label">Go deeper</span></button>'+
+        '<button class="tier-tab t-esc" data-tier="esc"><span>Escalate</span><span class="tier-label">When to hand off</span></button>'+
+      '</div>'+
+      '<div class="tier-panel active" id="tp-basic">'+
+        '<div class="sl">Plain summary</div>'+
+        '<p class="pt">'+e(ag.plain_summary)+'</p>'+
+        '<div class="sl">First-response steps</div>'+
+        '<ol class="steps">'+basicHtml+'</ol>'+
+        '<div class="alrt awn"><span class="aico">→</span><div>If basic steps confirm the issue, move to <strong>Investigative</strong> tab to dig in.</div></div>'+
+      '</div>'+
+      '<div class="tier-panel" id="tp-inv">'+
+        '<div class="sl">Investigation steps</div>'+
+        '<ol class="steps">'+invHtml+'</ol>'+
+        '<div class="fix-box"><strong>Fix:</strong> '+e(ag.fix)+'</div>'+
+      '</div>'+
+      '<div class="tier-panel" id="tp-esc">'+
+        '<div class="sl">Escalate when you see this</div>'+
+        '<ul class="esc-list">'+escHtml+'</ul>'+
+        '<div class="eto"><strong>Escalate to:</strong> '+e(ag.escalate_to)+'</div>'+
+      '</div>'+
+    '</div>';
+}
+
+function st(iss){const cl=iss.severity==='high'?'th':iss.severity==='med'?'tm':'tl';return'<span class="tag '+cl+'">'+e(iss.severity_label)+'</span>';}
+function e(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+</script>
+</body>
+</html>
